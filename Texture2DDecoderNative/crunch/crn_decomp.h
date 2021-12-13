@@ -2531,7 +2531,7 @@ namespace crnd
          return NULL;
       }
 
-      CRND_ASSERT(((uint32)p_new & (CRND_MIN_ALLOC_ALIGNMENT - 1)) == 0);
+      CRND_ASSERT(((intptr_t)p_new & (CRND_MIN_ALLOC_ALIGNMENT - 1)) == 0);
 
       return p_new;
    }
@@ -2556,7 +2556,7 @@ namespace crnd
       if (pActual_size)
          *pActual_size = actual_size;
 
-      CRND_ASSERT(((uint32)p_new & (CRND_MIN_ALLOC_ALIGNMENT - 1)) == 0);
+      CRND_ASSERT(((intptr_t)p_new & (CRND_MIN_ALLOC_ALIGNMENT - 1)) == 0);
 
       return p_new;
    }
