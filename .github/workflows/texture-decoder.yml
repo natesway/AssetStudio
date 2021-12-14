@@ -1,0 +1,76 @@
+name: TextureDecoderNative
+
+on:
+  push:
+    branches: [ cross ]
+  pull_request:
+    branches: [ cross ]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+defaults:
+  run:
+    working-directory: Texture2DDecoderNative
+
+jobs:
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake -B ${{github.workspace}}/build -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/Texture2DDecoderNative
+
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Install
+      run: cmake --install ${{github.workspace}}/build
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Texture2DDecoderNative-${{ matrix.os }}-${{ env.BUILD_TYPE }}
+        path: ${{github.workspace}}/lib/*
+  
+  publish:
+    runs-on: ubuntu-latest
+
+    needs: [ build ]
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Download all workflow run artifacts
+      uses: actions/download-artifact@v2
+
+    - name: Copy dlls to lib
+      run: |
+        mkdir -p lib/x64
+        cp ${{github.workspace}}/Texture2DDecoderNative-*-Release/* ./lib/x64/
+    
+    - name: Build nuget package
+      run: dotnet pack Texture2DDecoderNative.csproj -c Release
+
+    - name: Authenticate with nuget
+      run: dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/KiruyaMomochi/index.json"
+
+    - name: Publish nuget package
+      run: |
+        [xml]$solution = Get-Content ./Texture2DDecoderNative.csproj
+        $version = $solution.Project.PropertyGroup.Version
+        dotnet nuget push "bin/Release/Kyaru.Texture2DDecoderNative.$version.nupkg" --api-key "${{ secrets.GITHUB_TOKEN }}" --source github
+      shell: pwsh
