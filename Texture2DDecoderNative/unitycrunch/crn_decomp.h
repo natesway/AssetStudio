@@ -19,6 +19,8 @@
 #include <stdio.h>
 #ifdef _WIN32
 #include <memory.h>
+#elif __APPLE__
+#include <malloc/malloc.h>
 #else
 #include <malloc.h>
 #include <string.h>
@@ -1926,6 +1928,8 @@ static void* crnd_default_realloc(void* p, size_t size, size_t* pActual_size, bo
     if (pActual_size) {
 #ifdef _WIN32
       *pActual_size = p_new ? ::_msize(p_new) : 0;
+#elif __APPLE__
+      *pActual_size = p_new ? malloc_size(p_new) : 0;
 #else
       *pActual_size = p_new ? malloc_usable_size(p_new) : 0;
 #endif
@@ -1956,6 +1960,8 @@ static void* crnd_default_realloc(void* p, size_t size, size_t* pActual_size, bo
     if (pActual_size) {
 #ifdef _WIN32
       *pActual_size = ::_msize(p_final_block);
+#elif __APPLE__
+      *pActual_size = ::malloc_size(p_final_block);
 #else
       *pActual_size = ::malloc_usable_size(p_final_block);
 #endif
@@ -1969,6 +1975,8 @@ static size_t crnd_default_msize(void* p, void* pUser_data) {
   pUser_data;
 #ifdef _WIN32
   return p ? _msize(p) : 0;
+#elif __APPLE__
+      return p ? malloc_size(p) : 0;
 #else
   return p ? malloc_usable_size(p) : 0;
 #endif
