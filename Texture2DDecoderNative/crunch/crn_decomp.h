@@ -317,6 +317,8 @@ namespace crnd
 #include <stdio.h>
 #ifdef _WIN32
 #include <memory.h>
+#elif __APPLE__
+#include <malloc/malloc.h>
 #else
 #include <malloc.h>
 #include <string.h>
@@ -2427,6 +2429,8 @@ namespace crnd
          {
 #ifdef _WIN32
             *pActual_size = p_new ? ::_msize(p_new) : 0;
+#elif __APPLE__
+            *pActual_size = p_new ? malloc_size(p_new) : 0;
 #else
             *pActual_size = p_new ? malloc_usable_size(p_new) : 0;
 #endif
@@ -2463,6 +2467,8 @@ namespace crnd
          {
 #ifdef _WIN32
             *pActual_size = ::_msize(p_final_block);
+#elif __APPLE__
+            *pActual_size = ::malloc_size(p_final_block);
 #else
             *pActual_size = ::malloc_usable_size(p_final_block);
 #endif
@@ -2477,6 +2483,8 @@ namespace crnd
       pUser_data;
 #ifdef _WIN32
       return p ? _msize(p) : 0;
+#elif __APPLE__
+      return p ? malloc_size(p) : 0;
 #else
       return p ? malloc_usable_size(p) : 0;
 #endif
