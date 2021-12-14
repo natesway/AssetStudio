@@ -13,6 +13,7 @@
     <PackageId>Kyaru.Texture2DDecoderNative</PackageId>
     <Authors>Kiruya Momochi</Authors>    
     <PackageProjectUrl>https://github.com/KiruyaMomochi/AssetStudio</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/KiruyaMomochi/AssetStudio</RepositoryUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Description>Decode Unity Texture2D.</Description>
   </PropertyGroup>
