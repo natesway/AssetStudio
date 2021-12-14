@@ -1,4 +1,4 @@
-name: CMake
+name: TextureDecoderNative
 
 on:
   push:
@@ -45,3 +45,22 @@ jobs:
       with:
         name: Texture2DDecoderNative-${{ matrix.os }}-${{ env.BUILD_TYPE }}
         path: ${{github.workspace}}/lib/*
+  
+  publish:
+    runs-on: ubuntu-latest
+
+    needs: [ build ]
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Download all workflow run artifacts
+      uses: actions/download-artifact@v2
+
+    - name: Copy dlls to lib
+      run: |
+        mkdir -p lib/x64
+        cp ${{github.workspace}}/Texture2DDecoderNative-*-Release/* ./lib/x64/
+    
+    - name: Build nuget package
+      run: dotnet pack Texture2DDecoderNative.csproj -c Release
