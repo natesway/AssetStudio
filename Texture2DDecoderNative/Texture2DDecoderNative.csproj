@@ -1,14 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Pack">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
 
     <NoBuild>true</NoBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IncludeSymbols>false</IncludeSymbols>
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <PackageVersion>$(VERSION)</PackageVersion>
 
     <PackageId>Kyaru.Texture2DDecoderNative</PackageId>
     <Authors>Kiruya Momochi</Authors>    
