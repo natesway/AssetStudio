@@ -9,6 +9,8 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
+  # Set a user agent for wget to be able to download the installation packages
+  USER_AGENT: "Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0"
 
 defaults:
   run:
@@ -24,6 +26,12 @@ jobs:
     strategy:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
+        arch: [x64]
+        include:
+          - os: windows-latest
+            arch: x86
+          - os: macos-latest
+            arch: arm64
 
     steps:
     - uses: actions/checkout@v2
@@ -35,39 +43,48 @@ jobs:
         Push-Location -Path $fbxsdk
 
         if ($IsWindows) {
-          Invoke-WebRequest -UserAgent 'Firefox' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_vs2019_win.exe' -OutFile './fbxsdk_vs2019_win.exe'
+          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_vs2019_win.exe' -OutFile './fbxsdk_vs2019_win.exe'
           7z x fbxsdk_vs2019_win.exe
-          Set-Location -Path samples
-          
-          (Get-Content .\CMakeSettings.txt -Raw).ReplaceLineEndings("`n").Replace(
-              "ELSEIF(MSVC_VERSION GREATER 1910 AND MSVC_VERSION LESS 2000)",
-              "ELSEIF(MSVC_VERSION GREATER 1920 AND MSVC_VERSION LESS 2000)`nSET(FBX_COMPILER `"vs2019`")
-              ELSEIF(MSVC_VERSION GREATER 1910 AND MSVC_VERSION LESS 1920)`nSET(FBX_COMPILER `"vs2017`")").ReplaceLineEndings() | Set-Content .\CMakeSettings.txt
+          Remove-Item -Path 'fbxsdk_vs2019_win.exe'
         }
         elseif ($IsMacOS) {
-          Invoke-WebRequest -UserAgent 'Firefox' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_clang_mac.pkg.tgz' -OutFile './fbx202021_fbxsdk_clang_mac.pkg.tgz'
+          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_clang_mac.pkg.tgz' -OutFile './fbx202021_fbxsdk_clang_mac.pkg.tgz'
           tar -xzf fbx202021_fbxsdk_clang_mac.pkg.tgz
           pkgutil --expand fbx202021_fbxsdk_clang_macos.pkg fbx202021_fbxsdk_clang_macos
           tar -xzf fbx202021_fbxsdk_clang_macos/Root.pkg/Payload --strip-components=5
+          Remove-Item -Recurse -Force -Path '*.pkg.tgz', '*.pkg', 'fbx202021_fbxsdk_clang_macos'
         }
         else {
-          Invoke-WebRequest -UserAgent 'Firefox' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_linux.tar.gz' -OutFile './fbxsdk_linux.tar.gz'
+          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_linux.tar.gz' -OutFile './fbxsdk_linux.tar.gz'
           tar -xzf fbxsdk_linux.tar.gz
           "yes`nn" | ./fbx202021_fbxsdk_linux .
+          Remove-Item -Path 'fbxsdk_linux.tar.gz'
         }
 
         Pop-Location
       working-directory: .
       shell: pwsh
 
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+    # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+    # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+
+    - name: Configure CMake (Unix)
+      if: ${{ !startsWith('matrix.os', 'windows') }}
       run: >
         cmake -B ${{github.workspace}}/build 
         -D FBX_SDK_ROOT=${{github.workspace}}/fbxsdk
-        -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib
-        -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} 
+        -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib/${{ matrix.arch }}
+        -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        ${{github.workspace}}/AssetStudioFBXNative
+
+    - name: Configure CMake (Windows)
+      if: ${{ startsWith('matrix.os', 'windows') }}
+      run: >
+        cmake -B ${{github.workspace}}/build 
+        -D FBX_SDK_ROOT=${{github.workspace}}/fbxsdk
+        -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib/${{ matrix.arch }}
+        -D CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        -A ${{ matrix.arch }}
         ${{github.workspace}}/AssetStudioFBXNative
 
     - name: Build
@@ -81,7 +98,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: AssetStudioFBXNative-${{ matrix.os }}-${{ env.BUILD_TYPE }}
-        path: ${{github.workspace}}/lib/*
+        path: ${{github.workspace}}/lib/
   
   publish:
     runs-on: ubuntu-latest
@@ -97,7 +114,7 @@ jobs:
     - name: Copy dlls to lib
       run: |
         mkdir -p lib/x64
-        cp ${{github.workspace}}/AssetStudioFBXNative-*-Release/* ./lib/x64/
+        cp ${{github.workspace}}/AssetStudioFBXNative-*-Release/* ./lib/
     
     - name: Build nuget package
       run: dotnet pack AssetStudioFBXNative.csproj -c Release
