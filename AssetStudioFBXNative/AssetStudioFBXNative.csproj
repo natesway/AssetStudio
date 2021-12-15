@@ -1,15 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Pack">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>1.0.0</Version>
 
-    <NoBuild>true</NoBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IncludeSymbols>false</IncludeSymbols>
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 
-    <PackageId>Kyaru.AssetStudioFBXNative</PackageId>
+    <PackageId>Kyaru.AssetStudio.FBXNative</PackageId>
     <Authors>Kiruya Momochi</Authors>    
     <PackageProjectUrl>https://github.com/KiruyaMomochi/AssetStudio</PackageProjectUrl>
     <RepositoryUrl>https://github.com/KiruyaMomochi/AssetStudio</RepositoryUrl>
@@ -20,16 +19,19 @@
   <ItemGroup>
     <Content Include="./lib/x64/libAssetStudioFBXNative.so">
       <PackagePath>runtimes/linux-x64/native/</PackagePath>
+      <Link>runtimes/linux-x64/native/libAssetStudioFBXNative.so</Link>
       <Pack>true</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="./lib/x64/libAssetStudioFBXNative.dylib">
       <PackagePath>runtimes/osx-x64/native/</PackagePath>
+      <Link>runtimes/osx-x64/native/libAssetStudioFBXNative.dylib</Link>
       <Pack>true</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="./lib/x64/AssetStudioFBXNative.dll">
       <PackagePath>runtimes/win-x64/native/</PackagePath>
+      <Link>runtimes/win-x64/native/AssetStudioFBXNative.dll</Link>
       <Pack>true</Pack>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
