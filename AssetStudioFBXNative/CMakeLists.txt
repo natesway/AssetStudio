@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.13)
+
 project(AssetStudioFBXNative)
 set(CMAKE_CXX_STANDARD 17)
 
-add_compile_definitions(DLL_EXPORTS _AS_DLL)
+add_compile_definitions(_AS_DLL)
 
 add_library(AssetStudioFBXNative SHARED
     SHARED
