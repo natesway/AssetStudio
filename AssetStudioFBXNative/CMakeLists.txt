@@ -8,12 +8,11 @@ add_compile_definitions(_AS_DLL)
 if(NOT DEFINED FBX_SDK_ROOT)
   message(FATAL_ERROR "FBX_SDK_ROOT must be defined")
 endif()
+include("fbx.cmake")
 
-include("${FBX_SDK_ROOT}/samples/CMakeSettings.txt")
-
-fbx_project(AssetStudioFBXNative .)
-
-set(FBX_TARGET_SOURCE
+add_library(
+    AssetStudioFBXNative
+    SHARED
     asfbx_anim_context.cpp
     asfbx_context.cpp
     api.cpp
@@ -22,13 +21,20 @@ set(FBX_TARGET_SOURCE
     utils.cpp
 )
 
-add_library(
-    ${FBX_TARGET_NAME}
-    SHARED
-    ${FBX_TARGET_SOURCE}
+if(WIN32)
+  # Set /MT or /MD according to FBX_STATIC_RTL flags
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /W4 ${FBX_CC_RTLd}")
+  SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /W4 ${FBX_CC_RTLd}")
+  SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${FBX_CC_RTL}")
+  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ${FBX_CC_RTL}")
+  SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${FBX_CC_RTL}")
+  SET(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} ${FBX_CC_RTL}")
+endif()
+
+target_link_libraries(AssetStudioFBXNative PRIVATE ${FBX_REQUIRED_LIBS_DEPENDENCY})
+target_include_directories(AssetStudioFBXNative PRIVATE
+                           ${PROJECT_SOURCE_DIR}
+                           "${FBX_ROOT}/include"
 )
 
-set_samples_global_flags()
-
-target_include_directories(AssetStudioFBXNative PRIVATE ${PROJECT_SOURCE_DIR})
 install(TARGETS AssetStudioFBXNative DESTINATION ${CMAKE_INSTALL_LIBDIR})
