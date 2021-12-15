@@ -19,14 +19,16 @@ target_include_directories(AssetStudioFBXNative PRIVATE
 
 IF(APPLE)
 target_link_libraries(AssetStudioFBXNative
-    PRIVATE optimized ${FBX_LIB}/libfbxsdk.dylib
+    PUBLIC optimized ${FBX_LIB}/libfbxsdk.dylib
 )
 ELSEIF(WIN32)
 target_link_libraries(AssetStudioFBXNative 
-    PRIVATE optimized ${FBX_LIB}/libfbxsdk-md.lib 
-    PRIVATE optimized ${FBX_LIB}/libxml2-md.lib
-    PRIVATE optimized ${FBX_LIB}/zlib-md.lib
+    PUBLIC optimized ${FBX_LIB}/libfbxsdk-md.lib 
+    PUBLIC optimized ${FBX_LIB}/libxml2-md.lib
+    PUBLIC optimized ${FBX_LIB}/zlib-md.lib
 )
+ELSEIF(UNIX) # already excluded apple
+set_target_properties(AssetStudioFBXNative PROPERTIES COMPILE_FLAGS -${MXX} LINK_FLAGS -${MXX})
 ENDIF()
 # Ubuntu version installs to /usr -> linker automatically finds it
 
