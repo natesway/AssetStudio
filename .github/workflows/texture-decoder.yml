@@ -76,5 +76,5 @@ jobs:
       run: |
         [xml]$solution = Get-Content ./Texture2DDecoderNative.csproj
         $version = $solution.Project.PropertyGroup.Version
-        dotnet nuget push "bin/Release/Kyaru.AssetStudio.Texture2DDecoderNative.$version.nupkg" --api-key "${{ secrets.GITHUB_TOKEN }}" --source github
+        dotnet nuget push "bin/Release/Kyaru.AssetStudio.Texture2DDecoderNative.$version.nupkg" --api-key "${{ secrets.GITHUB_TOKEN }}" --source github --skip-duplicate
       shell: pwsh
