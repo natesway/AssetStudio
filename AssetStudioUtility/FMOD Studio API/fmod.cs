@@ -7,7 +7,9 @@
 using System;
 using System.Text;
 using System.Runtime.InteropServices;
+#if NETFRAMEWORK
 using AssetStudio.PInvoke;
+#endif
 
 namespace FMOD
 {
@@ -1591,7 +1593,9 @@ namespace FMOD
 
         static Factory()
         {
+#if NETFRAMEWORK
             DllLoader.PreloadDll(VERSION.dll);
+#endif
         }
 
         public static RESULT System_Create(out System system)
