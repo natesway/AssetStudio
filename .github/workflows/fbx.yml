@@ -113,8 +113,8 @@ jobs:
 
     - name: Copy dlls to lib
       run: |
-        mkdir -p lib/x64
-        cp ${{github.workspace}}/AssetStudioFBXNative-*-Release/* ./lib/
+        mkdir -p lib
+        cp -r ${{github.workspace}}/AssetStudioFBXNative-*-Release/* ./lib/
     
     - name: Build nuget package
       run: dotnet pack AssetStudioFBXNative.csproj -c Release

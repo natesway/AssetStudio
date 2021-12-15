@@ -63,8 +63,8 @@ jobs:
 
     - name: Copy dlls to lib
       run: |
-        mkdir -p lib/x64
-        cp ${{github.workspace}}/Texture2DDecoderNative-*-Release/* ./lib/x64/
+        mkdir -p lib
+        cp -r ${{github.workspace}}/AssetStudioFBXNative-*-Release/* ./lib/
     
     - name: Build nuget package
       run: dotnet pack Texture2DDecoderNative.csproj -c Release
