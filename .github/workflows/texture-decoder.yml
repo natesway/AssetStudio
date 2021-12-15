@@ -93,7 +93,7 @@ jobs:
     - name: Copy dlls to lib
       run: |
         mkdir -p lib
-        cp -r ${{github.workspace}}/AssetStudioFBXNative-*-Release/* ./lib/
+        cp -r ${{github.workspace}}/${{ env.PROJECT_NAME }}-*-Release/* ./lib/
         tree ./lib/
     
     - name: Build nuget package
