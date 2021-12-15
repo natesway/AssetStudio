@@ -39,13 +39,10 @@ jobs:
           7z x fbxsdk_vs2019_win.exe
           Set-Location -Path samples
           
-          (Get-Content .\CMakeSettings.txt -Raw).ReplaceLineEndings("`n").Replace('
-              ELSEIF(MSVC_VERSION GREATER 1910 AND MSVC_VERSION LESS 2000)
-                  SET(FBX_COMPILER "vs2017")', '
-              ELSEIF(MSVC_VERSION GREATER 1910 AND MSVC_VERSION LESS 1920)
-                  SET(FBX_COMPILER "vs2017")
-              ELSEIF(MSVC_VERSION GREATER 1920 AND MSVC_VERSION LESS 2000)
-                  SET(FBX_COMPILER "vs2019")').ReplaceLineEndings() | Set-Content .\CMakeSettings.txt
+          (Get-Content .\CMakeSettings.txt -Raw).ReplaceLineEndings("`n").Replace(
+              "ELSEIF(MSVC_VERSION GREATER 1910 AND MSVC_VERSION LESS 2000)",
+              "ELSEIF(MSVC_VERSION GREATER 1920 AND MSVC_VERSION LESS 2000)`nSET(FBX_COMPILER `"vs2019`")
+              ELSEIF(MSVC_VERSION GREATER 1910 AND MSVC_VERSION LESS 1920)`nSET(FBX_COMPILER `"vs2017`")").ReplaceLineEndings() | Set-Content .\CMakeSettings.txt
         }
         elseif ($IsMacOS) {
           Invoke-WebRequest -UserAgent 'Firefox' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_clang_mac.pkg.tgz' -OutFile './fbx202021_fbxsdk_clang_mac.pkg.tgz'
