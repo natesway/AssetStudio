@@ -109,5 +109,5 @@ jobs:
       run: |
         [xml]$solution = Get-Content ./AssetStudioFBXNative.csproj
         $version = $solution.Project.PropertyGroup.Version
-        dotnet nuget push "bin/Release/Kyaru.AssetStudioFBXNative.$version.nupkg" --api-key "${{ secrets.GITHUB_TOKEN }}" --source github
+        dotnet nuget push "bin/Release/Kyaru.AssetStudio.FBXNative.$version.nupkg" --api-key "${{ secrets.GITHUB_TOKEN }}" --source github
       shell: pwsh

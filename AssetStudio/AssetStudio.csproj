@@ -8,6 +8,16 @@
     <Copyright>Copyright © Perfare 2018-2021</Copyright>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageId>Kyaru.AssetStudio</PackageId>
+    <RepositoryUrl>https://github.com/KiruyaMomochi/AssetStudio</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../LICENSE" Pack="true" PackagePath=""/>
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
     <PackageReference Include="K4os.Compression.LZ4" Version="1.2.16" />
   </ItemGroup>
