@@ -10,4 +10,8 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+    <Compile Remove="DllLoader.cs"  />
+  </ItemGroup>
+
 </Project>
