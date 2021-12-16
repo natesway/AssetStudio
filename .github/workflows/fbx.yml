@@ -16,7 +16,7 @@ env:
   USER_AGENT: "Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0"
   PROJECT_NAME: AssetStudioFBXNative
   PACKAGE_NAME: Kyaru.AssetStudio.FBXNative
-  FBX_VERSION: "2021.2.1"
+  FBX_VERSION: "2020.2.1"
 
 defaults:
   run:
@@ -45,28 +45,44 @@ jobs:
     - name: Download FBX SDK
       run: |
         $fbxsdk = "${{github.workspace}}/fbxsdk"
+        $y, $m, $d = '${{ env.FBX_VERSION }}'.Split('.')
+        $fbxVersionDash = "$y-$m-$d"
+        $fbxVersionJoin = "$y$m$d"
+        $binBase = "fbx${fbxVersionJoin}_fbxsdk"
+        $urlBase = "https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/$fbxVersionDash"
+
         New-Item -ItemType Directory -Force -Path $fbxsdk
         Push-Location -Path $fbxsdk
 
         if ($IsWindows) {
-          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_vs2019_win.exe' -OutFile './fbxsdk_vs2019_win.exe'
-          7z x fbxsdk_vs2019_win.exe
-          Remove-Item -Path 'fbxsdk_vs2019_win.exe'
+          $file = "${binBase}_vs2019_win.exe"
+          $uri = "${urlBase}/${file}"
+
+          Write-Host $uri
+          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri $uri -OutFile $file
+          7z x $file
         }
         elseif ($IsMacOS) {
-          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_clang_mac.pkg.tgz' -OutFile './fbx202021_fbxsdk_clang_mac.pkg.tgz'
-          tar -xzf fbx202021_fbxsdk_clang_mac.pkg.tgz
-          pkgutil --expand fbx202021_fbxsdk_clang_macos.pkg fbx202021_fbxsdk_clang_macos
-          tar -xzf fbx202021_fbxsdk_clang_macos/Root.pkg/Payload --strip-components=5
-          Remove-Item -Recurse -Force -Path '*.pkg.tgz', '*.pkg', 'fbx202021_fbxsdk_clang_macos'
+          $file = "${binBase}_clang_mac.pkg.tgz"
+          $uri = "${urlBase}/${file}"
+
+          Write-Host $uri
+          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri $uri -OutFile $file
+          tar -xzf $file
+          pkgutil --expand "${binBase}_clang_macos.pkg" $binBase
+          tar -xzf $binBase/Root.pkg/Payload --strip-components=5
         }
         else {
-          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_linux.tar.gz' -OutFile './fbxsdk_linux.tar.gz'
-          tar -xzf fbxsdk_linux.tar.gz
-          "yes`nn" | ./fbx202021_fbxsdk_linux .
-          Remove-Item -Path 'fbxsdk_linux.tar.gz'
-        }
+          $file = "${binBase}_linux.tar.gz"
+          $uri = "${urlBase}/${file}"
 
+          Write-Host $uri
+          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri $uri -OutFile $file
+          tar -xzf $file
+          "yes`nn" | & "./${binBase}_linux" .
+        }
+        
+        Remove-Item -Recurse -Force -Path "${binBase}*"
         Pop-Location
       working-directory: .
       shell: pwsh
