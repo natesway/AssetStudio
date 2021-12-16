@@ -72,7 +72,7 @@ jobs:
       shell: pwsh
 
     - name: Install multilib
-      if: runner.os == 'Linux' && matrix.architecture == 'x86'
+      if: runner.os == 'Linux' && matrix.arch == 'x86'
       run: |
         sudo dpkg --add-architecture i386
         sudo apt update
