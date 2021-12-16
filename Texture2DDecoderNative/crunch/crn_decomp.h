@@ -383,7 +383,11 @@ namespace crnd
    #ifdef __x86_64__
       typedef uint64 ptr_bits;
    #else
-      typedef uint32 ptr_bits;
+      #ifdef __arm64__
+         typedef uint64 ptr_bits;
+      #else
+         typedef uint32 ptr_bits;
+      #endif
    #endif
 #endif
 
