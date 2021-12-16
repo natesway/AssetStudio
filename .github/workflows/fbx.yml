@@ -2,12 +2,12 @@ name: AssetStudioFBXNative
 
 on:
   push:
-    branches: [ cross ]
+    branches: [ cross-test ]
     paths:
       - AssetStudioFBXNative/**
       - '.github/workflows/fbx.yml'
   pull_request:
-    branches: [ cross ]
+    branches: [ cross-test ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
