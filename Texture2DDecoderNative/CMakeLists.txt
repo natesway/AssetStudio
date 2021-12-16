@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.13)
 project(Texture2DDecoderNative)
 set(CMAKE_CXX_STANDARD 17)
 
-add_compile_definitions(DLL_EXPORTS _T2D_DLL)
+add_compile_definitions(_T2D_DLL)
 
 add_library(Texture2DDecoderNative SHARED 
             astc.cpp

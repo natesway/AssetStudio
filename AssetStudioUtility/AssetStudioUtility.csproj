@@ -8,13 +8,26 @@
     <Copyright>Copyright © Perfare 2018-2021</Copyright>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageId>Kyaru.AssetStudio.Utility</PackageId>
+    <RepositoryUrl>https://github.com/KiruyaMomochi/AssetStudio</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../LICENSE" Pack="true" PackagePath=""/>
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="0.11.3" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta13" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <ProjectReference Include="..\AssetStudio.PInvoke\AssetStudio.PInvoke.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\AssetStudioFBXWrapper\AssetStudioFBXWrapper.csproj" />
     <ProjectReference Include="..\AssetStudio\AssetStudio.csproj" />
     <ProjectReference Include="..\Texture2DDecoderWrapper\Texture2DDecoderWrapper.csproj" />

@@ -3,6 +3,9 @@ name: AssetStudioFBXNative
 on:
   push:
     branches: [ cross ]
+    paths:
+      - AssetStudioFBXNative/**
+      - '.github/workflows/fbx.yml'
   pull_request:
     branches: [ cross ]
 
@@ -11,10 +14,9 @@ env:
   BUILD_TYPE: Release
   # Set a user agent for wget to be able to download the installation packages
   USER_AGENT: "Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0"
-  FBX_VERSION_DOT: "2020.2.1"
-  FBX_VERSION_DASH: "2020-2-1"
-  FBX_VERSION: "202021"
-  VS: 'vs2019' # for windows
+  PROJECT_NAME: AssetStudioFBXNative
+  PACKAGE_NAME: Kyaru.AssetStudio.FBXNative
+  FBX_VERSION: "2021.2.1"
 
 defaults:
   run:
@@ -30,151 +32,120 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        architecture: ['x86', 'x64', 'aarch64']
+        arch: ['x86', 'x64', 'arm64']
         exclude:
           - os: 'ubuntu-latest' # FBX offers no support for linux x arm64
-            architecture: 'aarch64'
+            arch: 'arm64'
           - os: 'macos-latest' # Apple dropped support for i363 with XCode 9.4
-            architecture: 'x86'
-    
+            arch: 'x86'
+
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Autodesk FBX (Windows)
-      if: runner.os == 'Windows'
+    - name: Download FBX SDK
       run: |
-        curl -L -H "user-agent: ${{ env.USER_AGENT }}" https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/${{ env.FBX_VERSION_DASH }}/${{ env.INSTALLER }} --output ${{ env.INSTALLER }}
-        Start-Process -Wait .\${{ env.INSTALLER }} -ArgumentList '/S'
-        del ${{ env.INSTALLER }}
-      env:
-        INSTALLER: 'fbx${{ env.FBX_VERSION }}_fbxsdk_${{ env.VS }}_win.exe'
+        $fbxsdk = "${{github.workspace}}/fbxsdk"
+        New-Item -ItemType Directory -Force -Path $fbxsdk
+        Push-Location -Path $fbxsdk
 
-    - name: Install Autodesk FBX (Mac)
-      if: runner.os == 'macOS'
-      run: |
-        wget --user-agent="${{ env.USER_AGENT }}" https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/${{ env.FBX_VERSION_DASH }}/${{ env.ZIP }}
-        tar -xzf ${{ env.ZIP }} --directory ./
-        sudo installer -pkg ./${{ env.INSTALLER }} -target /
-        rm ${{ env.INSTALLER }}
-        rm ${{ env.ZIP }}
-      env:
-        INSTALLER: 'fbx${{ env.FBX_VERSION }}_fbxsdk_clang_macos.pkg'
-        ZIP: 'fbx${{ env.FBX_VERSION }}_fbxsdk_clang_mac.pkg.tgz'
+        if ($IsWindows) {
+          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_vs2019_win.exe' -OutFile './fbxsdk_vs2019_win.exe'
+          7z x fbxsdk_vs2019_win.exe
+          Remove-Item -Path 'fbxsdk_vs2019_win.exe'
+        }
+        elseif ($IsMacOS) {
+          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_clang_mac.pkg.tgz' -OutFile './fbx202021_fbxsdk_clang_mac.pkg.tgz'
+          tar -xzf fbx202021_fbxsdk_clang_mac.pkg.tgz
+          pkgutil --expand fbx202021_fbxsdk_clang_macos.pkg fbx202021_fbxsdk_clang_macos
+          tar -xzf fbx202021_fbxsdk_clang_macos/Root.pkg/Payload --strip-components=5
+          Remove-Item -Recurse -Force -Path '*.pkg.tgz', '*.pkg', 'fbx202021_fbxsdk_clang_macos'
+        }
+        else {
+          Invoke-WebRequest -UserAgent '${{ env.USER_AGENT }}' -Uri 'https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_linux.tar.gz' -OutFile './fbxsdk_linux.tar.gz'
+          tar -xzf fbxsdk_linux.tar.gz
+          "yes`nn" | ./fbx202021_fbxsdk_linux .
+          Remove-Item -Path 'fbxsdk_linux.tar.gz'
+        }
 
-    - name: Install Autodesk FBX (Linux)
-      if: runner.os == 'Linux'
-      run: |
-        wget --user-agent="${{ env.USER_AGENT }}" https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/${{ env.FBX_VERSION_DASH }}/${{ env.ZIP }}
-        tar -xzf ${{ env.ZIP }} --directory ./
-        sudo chmod ugo+x ./${{ env.INSTALLER }}
-        yes yes | sudo ./${{ env.INSTALLER }} /usr
-        rm ${{ env.INSTALLER }}
-        rm ${{ env.ZIP }}
-        rm Install_FbxSdk.txt
-      env:
-        INSTALLER: 'fbx${{ env.FBX_VERSION }}_fbxsdk_linux'
-        ZIP: 'fbx${{ env.FBX_VERSION }}_fbxsdk_linux.tar.gz'
+        Pop-Location
+      working-directory: .
+      shell: pwsh
 
-    - name: Configure CMake (Windows x64)
-      if: runner.os == 'Windows' && matrix.architecture == 'x64'
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -A x64 -B ${{github.workspace}}/build -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFBX_INCLUDE='${{ env.FBX_SDK }}\include' -DFBX_LIB='${{ env.FBX_SDK }}\lib\${{ env.VS }}\${{ env.ARCH }}\release' ${{github.workspace}}/AssetStudioFBXNative
-      env:
-        FBX_SDK: 'C:\Program Files\Autodesk\FBX\FBX SDK\${{ env.FBX_VERSION_DOT }}'
-        ARCH: '${{ matrix.architecture }}'
-      
-    - name: Configure CMake (Windows x86/win32)
-      if: runner.os == 'Windows' && matrix.architecture == 'x86'
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -A win32 -B ${{github.workspace}}/build -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFBX_INCLUDE='${{ env.FBX_SDK }}\include' -DFBX_LIB='${{ env.FBX_SDK }}\lib\${{ env.VS }}\${{ env.ARCH }}\release' ${{github.workspace}}/AssetStudioFBXNative
-      env:
-        FBX_SDK: 'C:\Program Files\Autodesk\FBX\FBX SDK\${{ env.FBX_VERSION_DOT }}'
-        ARCH: '${{ matrix.architecture }}'
-
-    - name: Configure CMake (Windows aarch64)
-      if: runner.os == 'Windows' && matrix.architecture == 'aarch64'
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -A arm64 -B ${{github.workspace}}/build -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFBX_INCLUDE='${{ env.FBX_SDK }}\include' -DFBX_LIB='${{ env.FBX_SDK }}\lib\${{ env.VS }}\${{ env.ARCH }}\release' ${{github.workspace}}/AssetStudioFBXNative
-      env:
-        FBX_SDK: 'C:\Program Files\Autodesk\FBX\FBX SDK\${{ env.FBX_VERSION_DOT }}'
-        ARCH: 'arm64'
-
-    - name: Setup XCode Legacy (macOS x86)
-      if: runner.os == 'macOS' && matrix.architecture == 'x86'
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: |
-        git clone https://github.com/devernay/xcodelegacy.git
-        cd xcodelegacy
-        chmod +x XcodeLegacy.sh
-        sudo ./XcodeLegacy.sh buildpackages
-        sudo ./XcodeLegacy.sh install
-        cd ..
-
-    - name: Configure CMake (macOS x86)
-      if: runner.os == 'macOS' && matrix.architecture == 'x86'
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: sudo cmake -B ${{github.workspace}}/build -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib -DCMAKE_OSX_ARCHITECTURES="i386" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFBX_INCLUDE='${{ env.FBX_SDK }}/include' -DFBX_LIB='${{ env.FBX_SDK }}/lib/clang/release' ${{github.workspace}}/AssetStudioFBXNative
-      env:
-        FBX_SDK: '/Applications/Autodesk/FBX SDK/${{ env.FBX_VERSION_DOT }}'
-    
-    - name: Configure CMake (macOS x86_64)
-      if: runner.os == 'macOS' && matrix.architecture == 'x64'
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: sudo cmake -B ${{github.workspace}}/build -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib -DCMAKE_OSX_ARCHITECTURES="x86_64" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFBX_INCLUDE='${{ env.FBX_SDK }}/include' -DFBX_LIB='${{ env.FBX_SDK }}/lib/clang/release' ${{github.workspace}}/AssetStudioFBXNative
-      env:
-        FBX_SDK: '/Applications/Autodesk/FBX SDK/${{ env.FBX_VERSION_DOT }}'
-    
-    - name: Configure CMake (macOS arm64)
-      if: runner.os == 'macOS' && matrix.architecture == 'aarch64'
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: sudo cmake -B ${{github.workspace}}/build -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib -DCMAKE_OSX_ARCHITECTURES="arm64" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DFBX_INCLUDE='${{ env.FBX_SDK }}/include' -DFBX_LIB='${{ env.FBX_SDK }}/lib/clang/release' ${{github.workspace}}/AssetStudioFBXNative
-      env:
-        FBX_SDK: '/Applications/Autodesk/FBX SDK/${{ env.FBX_VERSION_DOT }}'
-
-    - name: Configure CMake (Linux x86)
+    - name: Install multilib
       if: runner.os == 'Linux' && matrix.architecture == 'x86'
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: |
-        sudo apt-get -y install gcc-multilib g++-multilib
-        sudo cmake -B ${{github.workspace}}/build -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib -DMXX='m32' -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/AssetStudioFBXNative
-        
-    - name: Configure CMake (Linux x64)
-      if: runner.os == 'Linux' && matrix.architecture == 'x64'
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: sudo cmake -B ${{github.workspace}}/build -D CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib -DMXX='m64' -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} ${{github.workspace}}/AssetStudioFBXNative
+        sudo dpkg --add-architecture i386
+        sudo apt update
+        sudo apt install -yq gcc-multilib g++-multilib
+        sudo apt install zlib1g-dev:i386 libsnappy-dev:i386 liblz4-dev:i386 libxml2-dev:i386
 
-    - name: Build (Windows)
-      if: runner.os == 'Windows'
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+    # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+    # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+
+    - name: Configure CMake
+      run: |
+        $arch = '${{ matrix.arch }}'
+        $buildArgs = @()
+        $buildArgs += '-B', '${{ github.workspace }}/build'
+        $buildArgs += '-D', 'FBX_SDK_ROOT=${{github.workspace}}/fbxsdk'
+        $buildArgs += '-D', 'CMAKE_INSTALL_LIBDIR=${{github.workspace}}/lib/${{ matrix.arch }}'
+        $buildArgs += '-D', 'CMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}'
+
+        if ($IsWindows) {
+          switch ($arch) {
+            'x86' {
+              $buildArgs += '-A', 'Win32'
+            }
+            default {
+              $buildArgs += '-A', $arch
+            }
+          }
+        }
+        elseif ($IsMacOS) {
+          switch ($arch) {
+            'x64' {
+              $buildArgs += '-D', 'CMAKE_OSX_ARCHITECTURES="x86_64"'
+            }
+            'arm64' {
+              $buildArgs += '-D', 'CMAKE_OSX_ARCHITECTURES="arm64"'
+            }
+            'universal' {
+              $buildArgs += '-D', 'CMAKE_OSX_ARCHITECTURES="x86_64;arm64"'
+            }
+            default {
+              Write-Error "Unsupported architecture: $arch"
+            }
+          }
+        }
+        else {
+          switch ($arch) {
+            'x86' {
+              $buildArgs += '-D', 'MXX=32'
+            }
+            'x64' {}
+            default {
+              Write-Error "Unsupported architecture: $arch"
+            }
+          }
+        }
+        
+        $buildArgs += '${{ github.workspace }}/${{ env.PROJECT_NAME }}'    
+        Write-Host $buildArgs
+        Start-Process cmake -ArgumentList $buildArgs -Wait
+      shell: pwsh
 
     - name: Build
-      if: runner.os != 'Windows'
       # Build your program with the given configuration
-      run: sudo cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      run: cmake --build '${{ github.workspace }}/build' --config ${{env.BUILD_TYPE}}
 
     - name: Install
-      if: runner.os != 'Windows'
-      run: sudo cmake --install ${{github.workspace}}/build
-
-    - name: Install (Windows)
-      if: runner.os == 'Windows'
-      run: cmake --install ${{github.workspace}}/build
+      run: cmake --install '${{ github.workspace }}/build'
 
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
-        name: AssetStudioFBXNative-${{ matrix.os }}-${{ matrix.architecture }}-${{ env.BUILD_TYPE }}
-        path: ${{github.workspace}}/lib/*
+        name: ${{ env.PROJECT_NAME }}-${{ matrix.os }}-${{ matrix.arch }}-${{ env.BUILD_TYPE }}
+        path: ${{github.workspace}}/lib/
   
   publish:
     runs-on: ubuntu-latest
@@ -189,18 +160,19 @@ jobs:
 
     - name: Copy dlls to lib
       run: |
-        mkdir -p lib/${{ matrix.architecture }}
-        cp ${{github.workspace}}/AssetStudioFBXNative-*-Release/* ./lib/${{ matrix.architecture }}/
+        mkdir -p lib
+        cp -r ${{github.workspace}}/${{ env.PROJECT_NAME }}-*-*-Release/* ./lib/
+        tree ./lib/
     
     - name: Build nuget package
-      run: dotnet pack AssetStudioFBXNative.csproj -c Release
+      run: dotnet pack ${{ env.PROJECT_NAME }}.csproj -c Release
 
     - name: Authenticate with nuget
       run: dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/KiruyaMomochi/index.json"
 
     - name: Publish nuget package
       run: |
-        [xml]$solution = Get-Content ./AssetStudioFBXNative.csproj
+        [xml]$solution = Get-Content ./${{ env.PROJECT_NAME }}.csproj
         $version = $solution.Project.PropertyGroup.Version
-        dotnet nuget push "bin/Release/Kyaru.AssetStudioFBXNative.$version.nupkg" --api-key "${{ secrets.GITHUB_TOKEN }}" --source github
+        dotnet nuget push "bin/Release/${{ env.PACKAGE_NAME }}.$version.nupkg" --api-key "${{ secrets.GITHUB_TOKEN }}" --source github --skip-duplicate
       shell: pwsh
