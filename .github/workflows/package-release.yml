@@ -1,0 +1,35 @@
+name: Release non-native NuGet packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Authenticate with nuget
+      run: dotnet nuget add source --username KiruyaMomochi --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/KiruyaMomochi/index.json"
+    - name: Build nuget package
+      run: dotnet pack -c Release -o '${{github.workspace}}/packages' --no-restore
+    - name: Push nuget package
+      run: |
+        Get-ChildItem ${{github.workspace}}/packages/*.nupkg | 
+          % { dotnet nuget push ($_.FullName) --api-key "${{ secrets.GITHUB_TOKEN }}" --source github --skip-duplicate }
