@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>0.0.0.6</Version>
+
+    <NoBuild>true</NoBuild>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeSymbols>false</IncludeSymbols>
+    <RuntimeIdentifiers>browser-wasm</RuntimeIdentifiers>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
+    <PackageId>Kyaru.AssetStudio.Texture2DDecoderNative.WebAssembly</PackageId>
+    <Authors>Kiruya Momochi</Authors>    
+    <PackageProjectUrl>https://github.com/KiruyaMomochi/AssetStudio</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/KiruyaMomochi/AssetStudio</RepositoryUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Description>Decode Unity Texture2D.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="./build/wasm/lib/libTexture2DDecoderNative.a">
+      <PackagePath>runtimes/browser-wasm/native/Texture2DDecoderNative.a</PackagePath>
+      <Link>runtimes/browser-wasm/native/Texture2DDecoderNative.a</Link>
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+    <Content Include="./build/Kyaru.AssetStudio.Texture2DDecoderNative.WebAssembly.props">
+      <PackagePath>build/</PackagePath>
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="../LICENSE" Pack="true" PackagePath=""/>
+  </ItemGroup>
+</Project>
