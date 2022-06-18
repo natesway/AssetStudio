@@ -9,12 +9,6 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <PackageId>Kyaru.AssetStudio</PackageId>
-    <RepositoryUrl>https://github.com/KiruyaMomochi/AssetStudio</RepositoryUrl>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-  </PropertyGroup>
-
   <ItemGroup>
     <None Include="../LICENSE" Pack="true" PackagePath=""/>
   </ItemGroup>

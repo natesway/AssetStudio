@@ -7,12 +7,6 @@
     <IncludeSymbols>false</IncludeSymbols>
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-
-    <PackageId>Kyaru.AssetStudio.Texture2DDecoderNative</PackageId>
-    <Authors>Kiruya Momochi</Authors>    
-    <PackageProjectUrl>https://github.com/KiruyaMomochi/AssetStudio</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/KiruyaMomochi/AssetStudio</RepositoryUrl>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Description>Decode Unity Texture2D.</Description>
   </PropertyGroup>
 

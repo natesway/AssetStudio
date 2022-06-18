@@ -10,12 +10,6 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <PackageId>Kyaru.AssetStudio.Texture2DDecoderWrapper</PackageId>
-    <RepositoryUrl>https://github.com/KiruyaMomochi/AssetStudio</RepositoryUrl>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-  </PropertyGroup>
-
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <ProjectReference Include="..\AssetStudio.PInvoke\AssetStudio.PInvoke.csproj" />
   </ItemGroup>

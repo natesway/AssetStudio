@@ -1,0 +1,9 @@
+<Project>
+    <PropertyGroup>
+        <PackageId>Kyaru.$(MSBuildProjectName)</PackageId>
+        <Authors>Kiruya Momochi</Authors>
+        <RepositoryUrl>https://github.com/KiruyaMomochi/AssetStudio</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/KiruyaMomochi/AssetStudio</PackageProjectUrl>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    </PropertyGroup>
+</Project>
