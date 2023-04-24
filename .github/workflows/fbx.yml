@@ -8,6 +8,8 @@ on:
       - '.github/workflows/fbx.yml'
   pull_request:
     branches: [ cross ]
+    
+  workflow_dispatch:
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
